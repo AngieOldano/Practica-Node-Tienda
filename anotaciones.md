@@ -1,32 +1,29 @@
-//promesas:
-// en el codigo sincronico el flujo de ejeucion se detiene hasta que se completa la tarea
-// el codigo asincronico permite que el flujo de ejecucion continue mientras se espera a que se  complete una determinada tarea
+### Promesas
+* En el codigo sincronico el flujo de ejeucion se detiene hasta que se completa la tarea.
+* En el codigo asincronico permite que el flujo de ejecucion continue mientras se espera a que se complete una determinada tarea.
 
-// las promesas son objetos que representan la eventual finalizacion o fracaso de una operacion asincronica y su 
-// valor resultante
+Las **promesas** son objetos que representan la eventual finalizacion o fracaso de una operacion asincronica y su valor resultante
 
-// .then() se utiliza para manejar el resultado exitoso de una promesa, mientras que .catch() se utiliza para manejar 
-// cualquier error que pueda ocurrir durante la ejecucion de la promesa
+* .then() se utiliza para manejar el resultado exitoso de una promesa, mientras que .catch() se utiliza para manejar cualquier error que pueda ocurrir durante la ejecucion de la promesa
 
-// async/await es una sintaxis que permite escribir codigo asincronico de manera mas legible y facil de entender
-// async se utiliza para declarar una funcion asincronica, mientras que await se utiliza para esperar a que una 
-// promesa se resuelva antes de continuar con la ejecucion del codigo
+* **async/await** es una sintaxis que permite escribir codigo asincronico de manera mas legible y facil de entender
+* async se utiliza para declarar una funcion asincronica, mientras que await se utiliza para esperar a que una promesa se resuelva antes de continuar con la ejecucion del codigo
+* async y await van de la mano, es para que sea una funcion asincronica
 
 
-// cada operacion de base de datos es asincronica
+**Cada operacion de base de datos DEBE ser asincronica**
 
-// ORM, mapea el codigo de js para poder hacer consultas en la base de datos
-/// clase a tablas
-/// objetos a filas
-/// atributos a columnas
-/// relaciones entre objetos a relaciones entre tablas
-
-
-//async y await van de la mano, es para que sea una funcion asincronica
+### ORM
+Mapea el codigo de js para poder hacer consultas en la base de datos
+* clase a tablas
+* objetos a filas
+* atributos a columnas
+* relaciones entre objetos a relaciones entre tablas
 
 
-// el try catch captura el error y hace algo, para que si se rompe la app no se caiga, sino que mande un mensaje de error
-// el return dentro del if es para cuando no pones el else
+
+### Manejo de errores
+* El try catch captura el error y hace algo, para que si se rompe la app no se caiga, sino que mande un mensaje de error
 
     
 --------------------------------------------------------------------------
