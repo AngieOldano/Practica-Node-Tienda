@@ -13,13 +13,16 @@ app.use(express.json()) // para que la app pueda leer el JSON que va a mandar el
 app.get('/productos', async (req,res)=>{ // cuando a la app le llegue una peticion de tipo get ejecuta la funcion
     try {
         //LISTAR PRODUCTOS
-        const productos = await Producto.findAll() //devuelve un array de objetos donde cada uno es un producto
+        const productos = await Producto.findAll({ // a la funcion le pasamos un obj para filtrar los atributos que queres mostrar
+            attributes: ["nombre","precio","stock"]
+        }) //devuelve un array de objetos donde cada uno es un producto
         // ahora podemos mandar la respuesta:
         res.status(200).json(productos) //respuesta: mandamos un json con los productos
     } catch (error) {
         res.status(500).json({message: "Error al obtener los productos"}) //respuesta de error
     }
 })
+
 
 
 
@@ -44,6 +47,33 @@ app.post('/productos', async (req,res)=>{
         res.status(500).json({message: "Error al crear el producto"}) //respuesta de error
     }
 })
+
+
+
+
+
+
+// GET - devolver un producto por id
+app.get('/productos/:idProducto', async (req,res)=>{ // cuando a la app le llegue una peticion de tipo get ejecuta la funcion
+    try {
+        const {idProducto} = req.params //params para leer los parametros que va a pasar el usuario
+        const producto = await Producto.findByPk(idProducto,{  // al findByPk le pasamos el id que queremos buscar y el objeto para filtrar lo que se muestra
+            attributes: ["nombre","precio","stock"]
+            }
+        )
+        //Si no encuentra ningun producto con el id pasado:
+        if(!producto){
+            return res.status(404).json({message:"El producto no existe"}) 
+        }
+        res.status(200).json(producto)
+    } catch (error) {
+        res.status(500).json({message: "Error al obtener los productos"}) //respuesta de error
+    }
+
+})
+
+
+
 
 
 

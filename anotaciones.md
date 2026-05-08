@@ -27,6 +27,10 @@ Mapea el codigo de js para poder hacer consultas en la base de datos
 
     
 --------------------------------------------------------------------------
+## Estructura básica de las carpetas
+![Estructura](est-carpetas.png)
+* Models: un archivo por cada tabla
+* Index.js: Definir las relaciones, exportar los modelos
 ### Crear proyecto de cero
 
 **Inicializar proyecto de Node**
@@ -204,9 +208,73 @@ try {
     * como get ponemos http://localhost:3000/productos/ y mandamos SEND
 
 #### GET - obtener datos de un producto determinado por id
+
 ```
 app.get('/productos/:id', async (req,res)=>{ 
 ```
+* /id --> Parametro en la URL:
+```
+http://localhost:3000/productos/unId
+```
+* Mismas formas de hacer lo mismo:
+```
+const {idProducto} = req.params 
+```
+```
+req.params.id
+```
+* El params va a ser el parmetro que mande el usuario
+
+* FindOne es como findAll pero en vez de devoler una lista devuelve el primer registro que cumpla la condicion si lo hubiera
+```
+Producto.findOne({
+    where: {
+        id: idProducto
+    }
+})
+```
+* Para primary keys findByPk es un metodo mas especifico y mejor
+```
+Producto.findByPk(idProducto)
+```
+* Si queremos devolver una respusta si el producto con el id petido no existe:
+```
+if(!producto){
+    return res.status(404).json({message:"El producto no existe"})
+}
+```
+ ***NOTA: Recordar el return para los if sin else***      
+* Como es peticion a la bdd usamos async await
+```
+app.get('/productos/:idProducto', async (req,res)=>{ // cuando a la app le llegue una peticion de tipo get ejecuta la funcion
+    try {
+        const {idProducto} = req.params //params para leer los parametros que va a pasar el usuario
+        const producto = await Producto.findByPk(idProducto)
+        res.status(200).json(producto)
+
+    }
+```
+* Probamos el GET
+    * Primero tiene que estar corriendo la app: npm run dev
+    * New HTTP Request
+    * como get ponemos http://localhost:3000/productos/unId y mandamos SEND
+
+#### GET - Con filtros
+* A la funcion tenemos que pasarle un objeto de esta forma:
+```
+{
+    where: {...}
+}
+```
+* O tambien podemos hacerlo de esta forma:
+```
+{
+    attributes: ["nombreDelCampo1","nombreDelCampo2"...]
+}
+```
+***NOTA: El where lo podemos usar como condicion de filtro para otras cosas por lo que podemos tener un attributes con un where juntos***
+
+
 
 #### POST - Crear productos
 * arriba de todo pero abajo de los const ponemos esto para que al hacer el req.body la app pueda leer el JSON que va a mandar el usuario
@@ -304,3 +372,4 @@ const producto = await Producto.create({})
     ***NOTA: va a crear el id(primarykey) automaticamente***
     * y mandamos SEND
 
+### RELACIONES
