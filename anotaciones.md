@@ -157,8 +157,8 @@ npm run dev //(porque asi lo definimos en el package)
 
     * SQLite Viewer es la extencion para ver la bdd
 
-### DEFINIMOS ENDPOINTS
-#### GET - listar productos
+## DEFINIMOS ENDPOINTS
+### GET - listar productos
 ```
 app.get('/productos', (req,res)=>{ 
 ``` 
@@ -207,7 +207,7 @@ try {
     * New HTTP Request
     * como get ponemos http://localhost:3000/productos/ y mandamos SEND
 
-#### GET - obtener datos de un producto determinado por id
+### GET - obtener datos de un producto determinado por id
 
 ```
 app.get('/productos/:id', async (req,res)=>{ 
@@ -259,7 +259,7 @@ app.get('/productos/:idProducto', async (req,res)=>{ // cuando a la app le llegu
     * New HTTP Request
     * como get ponemos http://localhost:3000/productos/unId y mandamos SEND
 
-#### GET - Con filtros
+### GET - Con filtros
 * A la funcion tenemos que pasarle un objeto de esta forma:
 ```
 {
@@ -276,7 +276,7 @@ app.get('/productos/:idProducto', async (req,res)=>{ // cuando a la app le llegu
 
 
 
-#### POST - Crear productos
+### POST - Crear productos
 * arriba de todo pero abajo de los const ponemos esto para que al hacer el req.body la app pueda leer el JSON que va a mandar el usuario
 ```
 app.use(express.json())
@@ -372,4 +372,338 @@ const producto = await Producto.create({})
     ***NOTA: va a crear el id(primarykey) automaticamente***
     * y mandamos SEND
 
-### RELACIONES
+## RELACIONES
+* Las relaciones van a ir en el ***static associate*** de cada modelo
+```
+class Producto extends Model { 
+
+    static associate(models) { 
+        // aca van las relaciones entre Producto con las demas tablas
+    }
+  }
+```
+## RUTAS
+
+## CONTROLADORES
+
+* Lo mejor es que las funciones controladoras esten lo mas limpias posibles, que no tengan ifs
+
+
+## MIDDLEWARE
+* VALIDACIONES
+* Recibe peticiones y manda una respuesta
+* Entre la peticion y la app --> Preprocesamiento
+* Entre la app y la respusta --> Postprocesamiento
+* La funcion de preprocesamiento va a hacer algo con la solicitud antes de llegar al destino, por ej: verificar que el usuario este autenticado, registrar la solicitud de un archivo.
+* Es como un filtro para solicitudes o respuestas y decide si pasa a otro filtro o responde directamente
+* Ocurre antes de ejecutar el controlador, son validaciones antes del controlador
+
+
+### App.js:
+```
+app.use(express.json()) 
+```
+esto es un Middleware armado en express, se lo conoce middleware a nivel aplicacion porque se ejecuta antes de las rutas
+
+```
+app.use(express.json())
+
+app.use('/productos', routerProductos)
+app.use('/categorias', routerCategoria)
+```
+* La funcion de preprocesamiento lee el json que manda el usuario en el body y lo convierte en un objeto en js
+
+* En las rutas van despues del path y antes del controlador
+```
+router.post('/', validarProducto, productosController.crearProducto)
+```
+* Entonces cuando quiero crear un producto primero va a ejecutar la funcion para validar un producto(que mando el usuario por el body)
+    * si es exitosa ejecuta el next propia de la funcion y va a pasar al controlador
+
+**ENTONCES EN VEZ DE QUE LOS CHEQUEOS/VALIDACIONES LOS HAGA EL CONTROLADOR LOS VA A HACER EL MIDDLEWARE**
+
+### Carpeta Middleware
+* Creamos una nueva carpeta en el proyecto llamada middlewares
+* Vamos a crear funciones con esta estructura
+```
+const validarProducto = (req,res,next) => {
+    // validacion
+    next()
+}
+```
+Al ejecutar next() va a pasar a la fucion controladora para poder crear el producto
+Son parecidas a las funciones controladoras pero con un tercer parametro next
+
+* Ahora podemos hacer que el middleware se encargue las validaciones, entonces podemos pasar los ifs que teniamos en el controlador
+```
+const validarProducto = (req,res,next) =>{ 
+    const{nombre, precio, stock, categoriaId} = req.body // van a tener los valores que mande el usuario
+        // si NO mando alguno de los campos
+        if(!nombre || precio == null || stock == null, !categoriaId){ // difentes formas de escribir que no tienen valor
+           return res.status(400).json({message:"Faltan campos obligatorios"}) //el return es porque no tiene else
+        }
+        if(precio <=0){
+            return res.status(400).json({message: "El precio debe ser mayor a 0"})
+        }
+        // Si pasa la validacion
+        next()
+}
+```
+
+* Para poder utilizar esta funcion debemos exportarla
+```
+module.exports =  validarProducto
+```
+* y en las rutas importarla
+```
+const validarProducto = require('../middlewares/validarProducto')
+```
+* la podemos utilizar asi, respetando que se ejecute antes del controlador
+```
+router.post('/', validarProducto, productosController.crearProducto)
+```
+
+### JOI
+* Es una bibloteca para validar datos
+* Define reglas
+* Valida estrutura, formato y tipo de datos
+* Valida que los datos sean correctos
+
+* Se define un esquema de como tienen que ser lo datos y JOI compara este esquema con los datos mandados por el usuario en el body
+
+* Primero instalamos el paquete
+```
+npm i joi
+```
+
+### Carpeta Schema
+* Importamos el paquete Joi
+
+```
+const Joi = require('joi')
+```
+* Creamos un esquema de validacion
+```
+const schemaProducto = Joi.objetct({ 
+    //campos
+})
+```
+Definimos como deben ser los datos que mande el usuario en el body
+
+
+```
+const schemaProducto = Joi.objetct({ // tiene que ser un objeto
+    nombre: Joi.string().min(3).max(100).requiered(),
+    precio: Joi.number().integer().positive().requiered(),
+})
+```
+* .string()--> de tipo string
+* .min(3) --> minimo 3 caracteres
+* .max(100)--> maximo 100 caracteres
+* .requiered() --> es obligatorio
+
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+```
+```
+
+```
+```
+
+```
+```
+
+```
+```
+
