@@ -30,7 +30,27 @@ Mapea el codigo de js para poder hacer consultas en la base de datos
 ## Estructura básica de las carpetas
 ![Estructura](est-carpetas.png)
 * Models: un archivo por cada tabla
+    * Contine la estructura de cada tabla, las relaciones entre tablas, y los detalles de cada columna
+* Routes: un archivo por cada recurso (producto, categoria, usuario...)
+    * Contiene los path(endpoints) y el metodo http (get, post, put, delete) de cada tabla
+    * Contiene el middleware de validacion de cada endpoint
+    * Contine los controladores de cada endpoint
+* Controllers: un archivo por cada recurso (producto, categoria, usuario...)
+    * Contiene la logica de cada endpoint, interactua con la base de datos a traves de los modelos
+* Schemas: un archivo por cada recurso (producto, categoria, usuario...)
+    * Contiene los esquemas de validaciones de cada recurso, con JOI
+* Middlewares: un archivo por cada recurso (producto, categoria, usuario...)
+    * Contiene las funciones de validacion de cada recurso, que utilizan los esquemas de validacion
+    * Manejan errores de validacion y devuelven mensajes de error personalizados
 * Index.js: Definir las relaciones, exportar los modelos
+
+***RESUMEN SENCILLO:***
+* Rutas(path,middleware, controlador)
+* Schemas --> Define los tipos de los datos
+* Widdlewares --> Validaciones usando funciones que pueden usar los schemas para validar los datos que manda el usuario, y manejar errores de validacion
+* Controladores --> Funciones que interactuan con la bdd, ya habiendo pasado las validaciones
+
+
 ### Crear proyecto de cero
 
 **Inicializar proyecto de Node**
@@ -157,7 +177,10 @@ npm run dev //(porque asi lo definimos en el package)
 
     * SQLite Viewer es la extencion para ver la bdd
 
-## DEFINIMOS ENDPOINTS
+## CONTROLLERS
+**DEFINIMOS LOS ENDPOINTS**
+
+### SI LOS DESFINIMOS DESDE LA APP.JS:
 ### GET - listar productos
 ```
 app.get('/productos', (req,res)=>{ 
@@ -370,7 +393,48 @@ const producto = await Producto.create({})
     ```
 
     ***NOTA: va a crear el id(primarykey) automaticamente***
-    * y mandamos SEND
+    * y mandamos SEND`
+
+## SI LOS DEFINIMOS DESDE LA CARPETA CONTROLLERS:
+* Lo mejor es que las funciones controladoras esten lo mas limpias posibles, que no tengan ifs
+
+* importamos los modelos para poder interactuar con la bdd
+```
+const { Producto, Categoria } = require('../models')
+```
+* Como la definimos para la app.js pero ahora la vamos a definir en el controlador, entonces no le pasamos el path ni el metodo http, sola la definimos, mantenemos la asincronia y el req y res
+```
+const obtenerProductos = async (req,res) => {
+```
+* Despues es misma estructura que antes
+```
+try {
+        //LISTAR PRODUCTOS
+        const productos = await Producto.findAll({ // a la funcion le pasamos un obj para filtrar los atributos que queres mostrar
+            attributes: ["nombre","precio","stock"]
+        }) //devuelve un array de objetos donde cada uno es un producto
+        // ahora podemos mandar la respuesta:
+        res.status(200).json(productos) //respuesta: mandamos un json con los productos
+    } catch (error) {
+        res.status(500).json({message: "Error al obtener los productos"}) //respuesta de error
+    }
+```
+* Si queremos incluir otro modelo dentro de la consulta lo hacemos despues de definir los atributos:
+```
+include: { // para incluir la categoria a la que pertenece el producto
+                model: Categoria,
+                as: "categoria",
+                attributes: ["nombre"] // solo queremos mostrar el nombre de la categoria    
+            }
+```
+***NOTA: EL INCLUDE FUNCIONA COMO UN JOIN EN SQL***
+* Si queremos recibir un argumento de un middleware de validacion lo recibimos por el req
+
+```
+const producto = req.producto // el producto que se encontro en el middleware de validacion de id
+```
+
+
 
 ## RELACIONES
 * Las relaciones van a ir en el ***static associate*** de cada modelo
@@ -383,10 +447,34 @@ class Producto extends Model {
   }
 ```
 ## RUTAS
+* Importamos el router de express para definir las rutas de productos, los middlewares de validacion y los controladores para manejar las peticiones
+```
+const { Router } = require('express') 
+const productosController = require('../controllers/productos.controllers') 
+const { validarProducto, validarProductoIdConCategoria, validarProductoId } = require('../middlewares/validarProductoId')
+```
+* Creamos una instancia del Router para definir las rutas de productos
+```
+const router = Router()
+```
 
-## CONTROLADORES
+* En las rutas definimos el path, el metodo http, el middleware de validacion y el controlador
+* Usamos las instancia de router seguida por un punto del metodo http, luego el path, luego el/los middleware de validacion y por ultimo el controlador.
 
-* Lo mejor es que las funciones controladoras esten lo mas limpias posibles, que no tengan ifs
+```
+router.get('/', productosController.obtenerProductos) // '/' es la ruta base para los productos
+router.get('/:id', validarProductoIdConCategoria, productosController.obtenerProducto) // el :id es un parametro dinamico que va a recibir el id del producto que queremos obtener, el middleware validarProductoIdConCategoria se encarga de validar que el id exista y que el producto tenga una categoria asociada, si no cumple con la validacion devuelve un error, si cumple con la validacion pasa al controlador para devolver el producto encontrado
+router.post('/', validarProducto, productosController.crearProducto)
+router.put('/:id', validarProductoId, validarProducto, productosController.actualizarProducto)
+router.delete('/:id', validarProductoId, productosController.eliminarProducto)
+```
+
+
+*  Para poder usar estas rutas en la app.js tenemos que exportarlas
+```
+module.exports = router
+```
+
 
 
 ## MIDDLEWARE
@@ -463,7 +551,12 @@ const validarProducto = require('../middlewares/validarProducto')
 router.post('/', validarProducto, productosController.crearProducto)
 ```
 
-### JOI
+* Si queremos pasarle un argumento a un controlador desde el middleware
+```
+req.producto = producto // guardamos el producto en el objeto req para que pueda ser usado en el controlador
+```
+
+## SCHEMAS - JOI
 * Es una bibloteca para validar datos
 * Define reglas
 * Valida estrutura, formato y tipo de datos
@@ -495,31 +588,79 @@ Definimos como deben ser los datos que mande el usuario en el body
 const schemaProducto = Joi.objetct({ // tiene que ser un objeto
     nombre: Joi.string().min(3).max(100).requiered(),
     precio: Joi.number().integer().positive().requiered(),
+    stock: Joi.number().integer().min(0).requiered(),
+    idCategoria: Joi.number().integer().positive().requiered()
 })
 ```
 * .string()--> de tipo string
 * .min(3) --> minimo 3 caracteres
 * .max(100)--> maximo 100 caracteres
 * .requiered() --> es obligatorio
+* number() --> de tipo numero
+* .integer() --> tiene que ser un numero entero
+* .positive() --> tiene que ser un numero positivo
+* la diferencia entre el .positive() y el .min(0) es que el positive no acepta el 0, mientras que el min(0) si lo acepta
+* .presition(2) --> para numeros decimales, le digo que tenga 2 decimales como maximo
+* . default() --> para poner un valor por defecto si el usuario no lo manda
 
-
-```
-```
-
-```
-```
-```
-```
-
-```
-```
+* Por ultimo importamos el esquema
 
 ```
+module.exports = schemaProducto
 ```
+### Carpeta Middleware
+* Importamos el esquema
 
 ```
+const schemaProducto = require('../schemas/producto.schema')
 ```
+* Validamos el request body con el esquema que realizamos
+
 ```
+const {error} = schemaProducto.validate(req.body) 
+```
+* Si hay un error de validacion devolvemos el mensaje del primer error encontrado, el details es un array con todos los errores encontrados, el message es el mensaje de error que se genero
+
+```
+if(error){ 
+        return res.status(400).json({message: error.details[0].message}) 
+    }  
+```
+* Al final del middleware si pasa la validacion ejecutamos el next para que pase al controlador
+```
+next()
+```
+### Carpeta Schema
+* Podemos personalizar los mensajes de error que devuelve JOI, para eso usamos el metodo .messages({}) despues de definir las reglas de validacion, dentro del messages le pasamos un objeto con el tipo de error y el mensaje personalizado que queremos mostrar
+```
+nombre: Joi.string()
+        .min(3)
+        .max(100)
+        .requiered()
+        .messages({ // personalizacion de los mensajes de error
+            "string.base": "El nombre debe ser un texto",
+            "string.empty": "El nombre no puede estar vacio",
+            "string.min": "El nombre debe tener al menos 3 caracteres",
+            "string.max": "El nombre no puede tener mas de 100 caracteres",
+            "any.required": "El nombre es obligatorio"
+
+        }),
+```
+* Puedo tener un schema dentro del otro
+
+```
+const schemaCategoria = Joi.object({ // esquema de validacion para la categoria
+    idCategoria: Joi.number()
+        .integer()
+        .positive()
+        .required()
+})
+
+const schemaProducto = Joi.objetct({ 
+    categoria: schemaCategoria.requiered(),
+    .....
+})
+
 ```
 
 ```
