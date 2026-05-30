@@ -8,13 +8,13 @@ const schemaCategoria = Joi.object({ // esquema de validacion para la categoria
         .required()
 })
 
-const schemaProducto = Joi.objetct({ // tiene que ser un objeto
-    categoria: schemaCategoria.requiered(), // el producto tiene que tener una categoria que cumpla con el esquema de categoria
+const schemaProducto = Joi.object({ // tiene que ser un objeto
+    categoria: schemaCategoria.required(), // el producto tiene que tener una categoria que cumpla con el esquema de categoria
 
     nombre: Joi.string()
         .min(3)
         .max(100)
-        .requiered()
+        .required()
         .messages({ // personalizacion de los mensajes de error
             "string.base": "El nombre debe ser un texto",
             "string.empty": "El nombre no puede estar vacio",
@@ -26,7 +26,7 @@ const schemaProducto = Joi.objetct({ // tiene que ser un objeto
     precio: Joi.number()
         .integer()
         .positive()
-        .requiered()
+        .required()
         .messages({
             "number.base": "El precio debe ser un numero",
             "number.empty": "El precio no puede estar vacio",
@@ -37,7 +37,7 @@ const schemaProducto = Joi.objetct({ // tiene que ser un objeto
     stock: Joi.number()
         .integer()
         .min(0)
-        .requiered()
+        .required()
         .messages({
             "number.base": "El stock debe ser un numero",
             "number.empty": "El stock no puede estar vacio",
@@ -48,7 +48,7 @@ const schemaProducto = Joi.objetct({ // tiene que ser un objeto
     idCategoria: Joi.number()
         .integer()
         .positive()
-        .requiered()
+        .required()
         .messages({
             "number.base": "El ID de categoria debe ser un numero",
             "number.empty": "El ID de categoria no puede estar vacio",
@@ -58,4 +58,9 @@ const schemaProducto = Joi.objetct({ // tiene que ser un objeto
         })
 })
 
-module.exports = schemaProducto // exportamos el esquema para poder usarlo en el middleware de validacion
+const schemaProductos = Joi.array().items(schemaProducto).min(1).required()
+
+module.exports = {
+    schemaProducto, // exportamos el esquema para poder usarlo en el middleware de validacion
+    schemaProductos
+}   

@@ -1,5 +1,5 @@
 const { Router } = require('express')
-const categoriaController = require('../controllers/categoria.controllers')
+const categoriaController = require('../controllers/categorias.controllers')
 const router = Router()
 
 router.get('/', categoriaController.obtenerCategorias)

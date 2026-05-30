@@ -125,6 +125,14 @@ Asi deberia quedar(para sqlite):
 * el config.json tiene diferentes entornos(development, test, production), segun el entorno donde trabajemos podemos conectarnos a diferentes bdd
 
 -----------------------------------------
+### Orden:
+1. Crear modelo con sus atributos y relaciones (con el comando)
+2. Creamos los controladores (creamos el archivo a mano)
+3. Crear las rutas del modelo (creamos el archivo a mano)
+
+-------------------------------------------
+## 1. Models
+
 ### Crear un modelo
 Creamos el modelo producto que se va a traducir en nuestra tabla, usamos sequelize-cli para generarla automaticamente
 ```
@@ -156,6 +164,69 @@ npm start //(porque asi lo definimos en el package)
 ```
 npm run dev //(porque asi lo definimos en el package)
 ```
+
+* Si queremos agregar mas caracteristicas o restricciones a un atributo(columna) tenemos que crear un objeto con las caracteristicas del atributo, por ejemplo para el nombre del producto que es un string y no puede ser nulo:
+```
+Etiqueta.init({
+    nombre: { // podemos agregar mas campos a atributo creando un objeto con las caracteristicas del atributo
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+  }
+```
+***NOTA: el id de cada modelo(tabla) es un campo que se crea automaticamente, no es necesario definirlo***
+
+* El allowNull: false es para que el campo sea obligatorio, no puede ser nulo, si el usuario no lo manda o lo manda vacio va a dar error de validacion
+* Tambien podemos existen:
+    * unique que es para que no pueda haber dos etiquetas con el mismo nombre
+    * defaultValue para poner un valor por defecto si el usuario no lo manda
+
+### RELACIONES
+* Las relaciones van a ir en el ***static associate*** de cada modelo
+```
+class Producto extends Model { 
+
+    static associate(models) { 
+        // aca van las relaciones entre Producto con las demas tablas
+    }
+  }
+```
+
+* Para las tablas intermedias como ProductoEtiqueta que es la tabla que relaciona los productos con las etiquetas, tenemos que definir los campos de la tabla intermedia, en este caso productoId y etiquetaId, ambos son enteros y no pueden ser nulos porque son claves foraneas
+```
+ProductoEtiqueta.init({
+    productoId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    etiquetaId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    }
+  }
+```
+***NOTA: productoId y etiquetaId son claves primarias en su respectiva tabla y en la tabla intermedia son claves foraneas***
+#### M a M
+* En las M a M no es necesario definir las asociaciones en el modelo intermedio, se definen en los modelos principales con belongsToMany
+```
+//En el modelo Producto:
+
+Producto.belongsToMany(models.Etiqueta, {
+    through: models.ProductoEtiqueta,
+    foreignKey: "productoId",
+    otherKey: "etiquetaId",
+    as: "etiquetas",
+});
+```
+* through: models.ProductoEtiqueta --> le decimos que la relacion es a traves de la tabla intermedia ProductoEtiqueta
+* tenemos que indicar la clave foranea, foreignKey: "productoId" --> le decimos que la clave foranea en la tabla intermedia es productoId(para el modelo Producto)
+* como hay dos claves foraneas, tenemos que indicar la otra con otherKey: "etiquetaId" --> le decimos que la otra clave foranea en la tabla intermedia es etiquetaId(para el modelo Etiqueta)
+* Es importate el orden de las claves foraneas:
+```
+foreignKey: "productoId", // aca va la del modelo actual (Producto)
+otherKey: "etiquetaId", //aca va la del modelo al que se relaciona (Etiqueta)
+```
+* El as es para el alias que es opcional, como es la relacion para etiquetas entonces el alias es etiquetas
 -------------------------------------
 ## App.js
 
@@ -176,7 +247,7 @@ npm run dev //(porque asi lo definimos en el package)
     ***NOTA: esto es porque hicimos la conexion con el db que en el index.js le vamos pasando todos los models que creemos*** 
 
     * SQLite Viewer es la extencion para ver la bdd
-
+-------------------------------------------
 ## CONTROLLERS
 **DEFINIMOS LOS ENDPOINTS**
 
@@ -436,23 +507,21 @@ const producto = req.producto // el producto que se encontro en el middleware de
 
 
 
-## RELACIONES
-* Las relaciones van a ir en el ***static associate*** de cada modelo
-```
-class Producto extends Model { 
-
-    static associate(models) { 
-        // aca van las relaciones entre Producto con las demas tablas
-    }
-  }
-```
 ## RUTAS
+**Para cada modelo vamos a crear un archivo de rutas**
+
 * Importamos el router de express para definir las rutas de productos, los middlewares de validacion y los controladores para manejar las peticiones
 ```
 const { Router } = require('express') 
 const productosController = require('../controllers/productos.controllers') 
 const { validarProducto, validarProductoIdConCategoria, validarProductoId } = require('../middlewares/validarProductoId')
 ```
+Pasos:
+1. Importar el router express: const {Router} = require('express')
+2. Importar los controladores: const productosController = require('../controllers/productos.controllers')
+3. Importar los middlewares de validacion: const { validarProducto, validarProductoIdConCategoria, validarProductoId } = require('../middlewares/validarProductoId')
+
+
 * Creamos una instancia del Router para definir las rutas de productos
 ```
 const router = Router()
@@ -474,7 +543,25 @@ router.delete('/:id', validarProductoId, productosController.eliminarProducto)
 ```
 module.exports = router
 ```
+----------------------------------
+### Exportar e importar funciones:
+Si exportamos la funcion de esta forma tenemos que importar asi:
+```
+module.exports = validarProducto // exportamos
 
+
+const validarProducto = require('../middlewares/validarProductoId') // importamos
+```
+pero si exportamos usando un objeto debemos usar la desestructuracion para importar:
+```
+module.exports = {   // exportamos
+    validarProductoIdConCategoria,
+    validarProductoId
+}
+
+const { validarProductoIdConCategoria, validarProductoId } = require('../middlewares/validarProductoId') // importamos 
+```
+-----------------------------------------
 
 
 ## MIDDLEWARE

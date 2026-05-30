@@ -18,12 +18,12 @@ const validarProductoId = async (req, res, next) =>{
 }
 
 // validacion para que el id del producto exista en la bdd y que el producto tenga una categoria asociada
-const validarProductoIdConCategoria = async (req, res, next) =>{
+const validarProductoIdConCategoria = async (req, res, next) =>{ // es igual a validarProductoId pero con la diferencia de que se incluye la categoria asociada al producto, esto es para el endpoint de obtener un producto por id que se le quiere mostrar la categoria a la que pertenece el producto
     try {
         const { id } = req.params
-        const producto = await Producto.findByPk(id, {
-            attributes: ["nombre","precio","stock"],
-            include: {
+        const producto = await Producto.findByPk(id, { // igual que validarProductoId pero con el objeto en findByPk para incluir la categoria asociada al producto
+            attributes: ["nombre","precio","stock"], 
+            include: { // incluimos la categoria asociada al producto
                 model: Categoria,
                 as: "categoria",
                 attributes: ["nombre"]

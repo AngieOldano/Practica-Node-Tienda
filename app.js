@@ -1,10 +1,10 @@
 const express = require('express') //importamos el paquete express
-const app =  express() // representa a toda nuestra app
-const db = require('./models/index') // importa del index el objeto db que contiene todos los modelos
+const app = express() // representa a toda nuestra app
+const db = require('./models') // importa del index el objeto db que contiene todos los modelos
 // VIEJO const {Producto} = require('./models') // importa el modelo producto
-const PORT = 3000 // numero de puerto donde escucha la app
 const routerProductos = require('./routes/productos.routes') // importamos las rutas de productos para usarlas en la app
 const routerCategoria = require('./routes/categorias.routes')
+const PORT = 3000 // numero de puerto donde escucha la app
 
 
 app.use(express.json()) // para que la app pueda leer el JSON que va a mandar el usuario para crear los productos en el POST
@@ -17,6 +17,7 @@ app.listen(PORT, async()=>{
     await db.sequelize.sync() //conexion con la bdd 
     console.log("La aplicacion esta corriendo en el puerto " + PORT)
 }) // la aplicacion escucha peticiones del puerto, le pasamos tambien una funcion con console.log
+
 
 
 

@@ -24,12 +24,10 @@ const obtenerProductos = async (req,res) => { // cuando a la app le llegue una p
 }
 
 // GET - devolver un producto por id
-const obtenerProducto = async (req,res) =>{ // cuando a la app le llegue una peticion de tipo get ejecuta la funcion
+const obtenerProducto = (req,res) =>{ // cuando a la app le llegue una peticion de tipo get ejecuta la funcion
     const producto = req.producto // el producto que se encontro en el middleware de validacion de id
     res.status(200).json(producto) //respuesta: mandamos un json con el producto encontrado
 }
-
-
 
 
 // POST - crear producto
@@ -49,6 +47,37 @@ const crearProducto = async (req,res) => {
         res.status(500).json({message: "Error al crear el producto"}) //respuesta de error
     }
 }
+
+
+const crearProductos = async (req, res) => {
+    try {
+        const productos = req.body
+
+        const productosFormateados = productos.map(producto => ({
+            nombre: producto.nombre,
+            precio: producto.precio,
+            stock: producto.stock,
+            categoriaId: producto.idCategoria
+        }))
+
+        const nuevosProductos = await Producto.bulkCreate(productosFormateados)
+
+        res.status(201).json(nuevosProductos)
+    } catch (error) {
+        res.status(500).json({
+            message: "Error al crear los productos"
+        })
+    }
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -92,6 +121,7 @@ module.exports = {
     obtenerProductos,
     obtenerProducto,
     crearProducto,
+    crearProductos,
     actualizarProducto,
     eliminarProducto
 }
