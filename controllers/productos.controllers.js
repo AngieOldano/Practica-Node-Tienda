@@ -1,4 +1,4 @@
-const { Producto, Categoria } = require('../models') 
+const { Producto, Categoria, Etiqueta } = require('../models') 
 
 
 // DEFINIMOS ENDPOINTS
@@ -10,11 +10,21 @@ const obtenerProductos = async (req,res) => { // cuando a la app le llegue una p
         //LISTAR PRODUCTOS
         const productos = await Producto.findAll({ // a la funcion le pasamos un obj para filtrar los atributos que queres mostrar
             attributes: ["nombre","precio","stock"],
-            include: { // para incluir la categoria a la que pertenece el producto, es como un JOIN en SQL
-                model: Categoria,
-                as: "categoria",
-                attributes: ["nombre"] // solo queremos mostrar el nombre de la categoria    
-            }
+            include: [
+                { // para incluir la categoria a la que pertenece el producto, es como un JOIN en SQL
+                    model: Categoria,
+                    as: "categoria",
+                    attributes: ["nombre"] // solo queremos mostrar el nombre de la categoria    
+                },
+                {// para incluir las etiquetas que tiene el producto, es como un JOIN en SQL
+                    model: Etiqueta,
+                    as: "etiquetas",
+                    attributes: ["id", "nombre"],
+                    through: {
+                        attributes: [],
+                    },
+                },
+            ]
         }) //devuelve un array de objetos donde cada uno es un producto
         // ahora podemos mandar la respuesta:
         res.status(200).json(productos) //respuesta: mandamos un json con los productos
@@ -117,15 +127,29 @@ const asignarEtiquetas = async (req, res) => {
         id: etiquetasIds,
       },
     });
-    await producto.setEtiquetas(etiquetas); // el producto que ya buscamos le asignamos las etiquetas encontradas con el metodo setEtiquetas(es un metodo que se genera automaticamente por la relacion de M a M)
-  } catch (error) { 
-    res.status(500).json({
-      error: "Error al asignar etiquetas al producto",
-    });
+    await producto.setEtiquetas(etiquetas);
+    res.status(200).json({ message: "Etiquetas asignadas con éxito" });
+  } catch (error) {
+    res.status(500).json({ error: "Error al asignar las etiquetas al producto" });
   }
 };
 
-
+// POST - asociar una etiqueta a un producto
+const asociarEtiqueta = async (req, res) => {
+  try {
+    const producto = req.producto;
+    const { etiquetaId } = req.params; // es por parametro no por el body
+    const etiqueta = await Etiqueta.findByPk(etiquetaId);
+    await producto.addEtiqueta(etiqueta);
+    res
+      .status(200)
+      .json({ message: "Etiqueta asociada con exito al producto!" });
+  } catch (error) {
+    res.status(500).json({
+      error: "Error al asociar la etiqueta con el producto",
+    });
+  }
+};
 
 
 
@@ -136,6 +160,7 @@ module.exports = {
     crearProductos,
     actualizarProducto,
     eliminarProducto,
-    asignarEtiquetas
+    asignarEtiquetas,
+    asociarEtiqueta
 }
 

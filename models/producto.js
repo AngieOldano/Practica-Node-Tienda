@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => { // exporta una funcion
   class Producto extends Model {  //creamos la clase producto que en la bdd va a ser la tabla Producto
 
     static associate(models) { // aca van las relaciones entre Producto con las demas tablas
-      Producto.belongsTo(models.Categoria,{
+      Producto.belongsTo(models.Categoria,{ // muchos productos pertenecen a una categoria, es decir que la tabla Producto tiene la clave foranea de Categoria
         foreignKey: "categoriaId",
         as: "categoria" //pronombre
       });

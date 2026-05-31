@@ -5,7 +5,10 @@ const db = require('./models') // importa del index el objeto db que contiene to
 const routerProductos = require('./routes/productos.routes') // importamos las rutas de productos para usarlas en la app
 const routerCategoria = require('./routes/categorias.routes')
 const routerEtiqueta = require("./routes/etiquetas.routes");
-const PORT = 3000 // numero de puerto donde escucha la app
+require("dotenv").config(); // para usar las variables de entorno, en este caso el puerto que va a usar la app, lo importamos del archivo .env
+
+
+const PORT = process.env.PORT || 3000; // le decimos a la app que use el puerto que esta en las variables de entorno, si no esta definido el puerto en las variables de entorno, va a usar el puerto 3000 por defecto
 
 
 app.use(express.json()) // para que la app pueda leer el JSON que va a mandar el usuario para crear los productos en el POST
