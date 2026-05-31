@@ -4,6 +4,7 @@ const db = require('./models') // importa del index el objeto db que contiene to
 // VIEJO const {Producto} = require('./models') // importa el modelo producto
 const routerProductos = require('./routes/productos.routes') // importamos las rutas de productos para usarlas en la app
 const routerCategoria = require('./routes/categorias.routes')
+const routerEtiqueta = require("./routes/etiquetas.routes");
 const PORT = 3000 // numero de puerto donde escucha la app
 
 
@@ -12,6 +13,7 @@ app.use(express.json()) // para que la app pueda leer el JSON que va a mandar el
 // para usar las rutas de productos
 app.use('/productos', routerProductos) //el primer parametro es el path base para las rutas de productos, el segundo parametro es la instancia del router que contiene las rutas de productos
 app.use('/categorias', routerCategoria)
+app.use("/etiquetas", routerEtiqueta);
 
 app.listen(PORT, async()=>{
     await db.sequelize.sync() //conexion con la bdd 

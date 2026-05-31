@@ -57,9 +57,10 @@ Mapea el codigo de js para poder hacer consultas en la base de datos
 ```
 npm init -i
 ```
-si da error usar antes:
+***NOTA: si da error instalar la misma version de node, por ejemplo:***
 ```
 nvm install 20
+nvm use 20
 ```
 esto crea el package.json
 
@@ -127,8 +128,10 @@ Asi deberia quedar(para sqlite):
 -----------------------------------------
 ### Orden:
 1. Crear modelo con sus atributos y relaciones (con el comando)
-2. Creamos los controladores (creamos el archivo a mano)
-3. Crear las rutas del modelo (creamos el archivo a mano)
+2. Crear las rutas del modelo (creamos el archivo a mano) --> elegimos los nombres de los middlewares y los controladores que vamos a crear
+3. Creamos los middlewares de validacion (creamos el archivo a mano)
+4. Creamos los controladores (creamos el archivo a mano)
+5. Agregamos las rutas a la app.js
 
 -------------------------------------------
 ## 1. Models
@@ -227,6 +230,14 @@ foreignKey: "productoId", // aca va la del modelo actual (Producto)
 otherKey: "etiquetaId", //aca va la del modelo al que se relaciona (Etiqueta)
 ```
 * El as es para el alias que es opcional, como es la relacion para etiquetas entonces el alias es etiquetas
+
+* Al crear relaciones de M a M sequeliza genera automaticamente los metodos para trabajar con las relaciones
+* Por ejemplo para asignar etiquetas a un producto, una vez que tenemos el producto y las etiquetas que queremos asignar, usamos el metodo setEtiquetas que se genera automaticamente por la relacion de M a M entre Producto y Etiqueta
+```
+await producto.setEtiquetas(etiquetas); 
+```
+***NOTA: el producto que ya buscamos le asignamos las etiquetas encontradas con el metodo setEtiquetas que se genera automaticamente por la relacion de muchos a muchos entre Producto y Etiqueta, este metodo reemplaza las etiquetas actuales del producto por las nuevas etiquetas que le pasamos como parametro***
+
 -------------------------------------
 ## App.js
 
@@ -371,13 +382,16 @@ app.get('/productos/:idProducto', async (req,res)=>{ // cuando a la app le llegu
 
 
 ### POST - Crear productos
+* el POST siempre va a tener un req.body porque el usuario va a mandar los datos para crear algo.
+* req.body --> el body es el lugar donde el usuario manda los datos para crear un producto, entonces para poder leer esos datos tenemos que usar el req.body
+
 * arriba de todo pero abajo de los const ponemos esto para que al hacer el req.body la app pueda leer el JSON que va a mandar el usuario
 ```
 app.use(express.json())
 ```
 
 * El req (request) es un objeto que representa la peticion del usuario
-* Dentro de la peticion el usuario tiene que mandar el nombre, el precio y el stock
+* Dentro de la peticion el usuario tiene que mandar el nombre, el precio y el stock por el body
 ```
 req.body.nombre
 req.body.precio
@@ -543,6 +557,19 @@ router.delete('/:id', validarProductoId, productosController.eliminarProducto)
 ```
 module.exports = router
 ```
+
+* Para las relaciones M a M NO cremaos un nuevo archivo para la tabla intermedia, las rutas pueden ir en cualquiera de los archivos de rutas de los modelos relacionados, podemos ponerlo si queremos en la ruta del modelo que nos parezca mas importante
+
+* Si queremos agregar varias etiquetas a un producto a traves de un array:
+```
+router.post("/:id/etiquetas", ....);
+```
+* Si queremos una etiqueta determinada a un producto por medio del id de la etiqueta:
+```
+router.post("/:id/etiquetas/:etiquetaId", ...);
+```
+
+
 ----------------------------------
 ### Exportar e importar funciones:
 Si exportamos la funcion de esta forma tenemos que importar asi:

@@ -22,6 +22,25 @@ router.put('/:id', validarProductoId, validarProducto, productosController.actua
 
 router.delete('/:id', validarProductoId, productosController.eliminarProducto)
 
+
+router.post( // para agregar multiples etiquetas a un producto(con un array)
+  "/:id/etiquetas",
+  validarProductoId,
+  productosController.asignarEtiquetas,
+);
+
+router.post( // para agregar una etiqueta determinada (por medio del id) a un producto
+  "/:id/etiquetas/:etiquetaId",
+  validarProductoId,
+  productosController.asociarEtiqueta,
+);
+
+
+
+
+
+
+
 module.exports = router
 
 

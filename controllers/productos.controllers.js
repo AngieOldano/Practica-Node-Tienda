@@ -24,7 +24,7 @@ const obtenerProductos = async (req,res) => { // cuando a la app le llegue una p
 }
 
 // GET - devolver un producto por id
-const obtenerProducto = (req,res) =>{ // cuando a la app le llegue una peticion de tipo get ejecuta la funcion
+const obtenerProducto = async (req,res) =>{ // cuando a la app le llegue una peticion de tipo get ejecuta la funcion
     const producto = req.producto // el producto que se encontro en el middleware de validacion de id
     res.status(200).json(producto) //respuesta: mandamos un json con el producto encontrado
 }
@@ -70,17 +70,6 @@ const crearProductos = async (req, res) => {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
 // PUT - actualizar producto
 const actualizarProducto = async (req, res) => { // cuando a la app le llegue una peticion de tipo put ejecuta la funcion
     try {
@@ -117,12 +106,36 @@ const eliminarProducto = async (req, res) => { // cuando a la app le llegue una 
     }
 }
 
+
+// POST - asignar etiquetaS a un producto
+const asignarEtiquetas = async (req, res) => {
+  try {
+    const producto = req.producto; // recibimos el producto del body y lo guardamos en la constante
+    const { etiquetasIds } = req.body; // recibimos del body un array de ids de etiquetas para asignar al producto
+    const etiquetas = await Etiqueta.findAll({ //buscamos las etiquetas en la base de datos con los ids recibidos
+      where: {
+        id: etiquetasIds,
+      },
+    });
+    await producto.setEtiquetas(etiquetas); // el producto que ya buscamos le asignamos las etiquetas encontradas con el metodo setEtiquetas(es un metodo que se genera automaticamente por la relacion de M a M)
+  } catch (error) { 
+    res.status(500).json({
+      error: "Error al asignar etiquetas al producto",
+    });
+  }
+};
+
+
+
+
+
 module.exports = {
     obtenerProductos,
     obtenerProducto,
     crearProducto,
     crearProductos,
     actualizarProducto,
-    eliminarProducto
+    eliminarProducto,
+    asignarEtiquetas
 }
 
